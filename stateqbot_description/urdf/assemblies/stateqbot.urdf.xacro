@@ -10,6 +10,8 @@
      joint lidar -> lidar_joint (same name as a link; Gazebo rejects that)
      lidar: link lidar
      total mass 5.975 kg
+       note: heavy for a small robot (Fusion's default material is steel). Above a few kg
+       Gazebo lets it creep a few mm/s when it should stand still; set real materials in Fusion.
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="stateqbot_macro">
   <xacro:macro name="stateqbot" params="prefix">

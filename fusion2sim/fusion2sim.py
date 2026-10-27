@@ -268,6 +268,9 @@ def analyse(args, links, joints, base):
     mass = sum(float(l.el.find('inertial/mass').get('value')) for l in links.values()
                if l.el.find('inertial/mass') is not None)
     report.append(f'total mass {mass:.3f} kg')
+    if mass > 3.0:
+        report.append('  note: heavy for a small robot (Fusion\'s default material is steel). Above a few kg')
+        report.append('  Gazebo lets it creep a few mm/s when it should stand still; set real materials in Fusion.')
     return dict(T=T, left=left, right=right, radius=radius, separation=separation, ground=ground,
                 wheel_x=wheel_x, casters=casters, renames=renames, lidar=lidar, mass=mass,
                 wheel_links=wheel_links, contact_links={n for n, _ in contacts}, report=report)
