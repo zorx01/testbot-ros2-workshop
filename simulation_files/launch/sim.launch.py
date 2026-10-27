@@ -167,6 +167,10 @@ def generate_launch_description():
         after_spawn = [
             Node(package='joint_state_publisher', executable='joint_state_publisher',
                  parameters=[{'use_sim_time': True}]),
+            # The robot cannot move yet, so odom sits on base_link (sim.rviz uses odom).
+            Node(package='tf2_ros', executable='static_transform_publisher',
+                 arguments=['--frame-id', 'odom', '--child-frame-id', 'base_link'],
+                 parameters=[{'use_sim_time': True}]),
             RegisterEventHandler(OnProcessExit(target_action=spawn_entity, on_exit=[rviz])),
         ]
 
