@@ -1,104 +1,88 @@
-# testbot: files for the Fusion 360 + ROS 2 workshop
+# Fusion 360 + ROS 2 workshop: from CAD export to a driving robot
 
-You export the robot from Fusion 360 with fusion2URDF. That gives you a ROS 2
-package called `testbot_description`. These files turn that export into a
-robot you can simulate and drive.
+You export a two-wheeled robot from Fusion 360 with fusion2URDF. That gives a
+ROS 2 package (`<robot>_description`) that RViz can show but Gazebo cannot
+simulate yet. This repository has two things:
 
-Two ways to use this repository:
+| Folder | What it is |
+|---|---|
+| `fusion2sim/` | a script that turns **your** export into a package you can simulate and drive |
+| `stateqbot_description/` | the workshop robot, already converted and tested: use it for the experiments |
 
-- **Follow the steps** with your own export: `simulation_files/` on Day 4,
-  `controller_files/` on Day 5 (sections 1 and 2 below).
-- **Use the complete package** `testbot_description/`: the finished, tested
-  robot with simulation and controllers already in it (section 3).
-
-## Get the files
+## Get it
 
 ```bash
 cd ~/Downloads
 git clone https://github.com/zorx01/testbot-ros2-workshop.git
 ```
 
-## 1. Simulation files (Day 4)
-
-Copy everything in `simulation_files/` into your exported package. Files with
-the same name are replaced; that is intended.
+## 1. Look at your export in RViz (Day 4)
 
 ```bash
-cp -r ~/Downloads/testbot-ros2-workshop/simulation_files/. \
-      ~/Documents/test_ws/src/testbot_description/
-cd ~/Documents/test_ws
-colcon build --symlink-install
-source install/setup.bash
-ros2 launch testbot_description display.launch.py   # RViz, wheel sliders
-ros2 launch testbot_description sim.launch.py       # Gazebo
-```
-
-What lands where:
-
-| File | Goes to | What it does |
-|---|---|---|
-| `launch/rsp.launch.py` | `launch/` | publishes the robot description and TF |
-| `launch/display.launch.py` | `launch/` (replaces the exported one) | RViz with joint sliders |
-| `launch/sim.launch.py` | `launch/` | Gazebo + spawn the robot |
-| `urdf/testbot.urdf.xacro` | `urdf/` (replaces) | entry point; adds the sim parts |
-| `urdf/assemblies/testbot.urdf.xacro` | `urdf/assemblies/` (replaces) | the exported robot, corrected for simulation |
-| `urdf/testbot.gazebo.xacro` | `urdf/` | wheel friction, Gazebo plugin |
-| `urdf/testbot.sensors.xacro` | `urdf/` | LiDAR and IMU |
-| `worlds/obstacles.world` | `worlds/` | the test world |
-| `rviz/*.rviz` | `rviz/` | RViz layouts |
-| `scripts/*.py` | `scripts/` | drive and scan demos |
-| `CMakeLists.txt`, `package.xml` | package root (replace) | install the new folders, list dependencies |
-
-## 2. Controller files (Day 5)
-
-Install the control packages once:
-
-```bash
-sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers \
-                 ros-humble-gazebo-ros2-control
-```
-
-Then add the two controller files and rebuild:
-
-```bash
-cp -r ~/Downloads/testbot-ros2-workshop/controller_files/. \
-      ~/Documents/test_ws/src/testbot_description/
-cd ~/Documents/test_ws
-colcon build --symlink-install
-source install/setup.bash
-ros2 launch testbot_description sim.launch.py
-```
-
-| File | Goes to | What it does |
-|---|---|---|
-| `urdf/testbot.ros2_control.xacro` | `urdf/` | tells ros2_control which joints it drives |
-| `config/ros2_controllers.yaml` | `config/` (replaces) | `joint_state_broadcaster` + `diff_drive_controller` |
-
-The launch files notice the new files by themselves: with them, `sim.launch.py`
-starts the controllers; without them, it does not.
-
-Drive it:
-
-```bash
-ros2 topic pub --rate 10 /diff_drive_controller/cmd_vel_unstamped \
-  geometry_msgs/msg/Twist "{linear: {x: 0.15}}"
-```
-
-## 3. The complete package
-
-Everything from sections 1 and 2, already put together. Use it to run the
-experiments, or to compare against your own package.
-
-```bash
-cd ~/Downloads
-git clone https://github.com/zorx01/testbot-ros2-workshop.git
-cp -r ~/Downloads/testbot-ros2-workshop/testbot_description ~/Documents/test_ws/src/
+cp -r ~/Downloads/stateqbot_description ~/Documents/test_ws/src/   # your export
+python3 ~/Downloads/testbot-ros2-workshop/fusion2sim/fusion2sim.py \
+        ~/Documents/test_ws/src/stateqbot_description --no-controller
 cd ~/Documents/test_ws
 rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install
 source install/setup.bash
-ros2 launch testbot_description sim.launch.py rviz:=true
+ros2 launch stateqbot_description display.launch.py     # move the joints with the sliders
+ros2 launch stateqbot_description sim.launch.py rviz:=true   # Gazebo
 ```
 
-Only one `testbot_description` may be in `src/` at a time. If your own
-export is there, move it out first (for example to `~/Documents/my_export`).
+The script prints what it measured (wheel radius, wheel separation, caster
+position) and what it changed. Check those numbers against your CAD.
+
+What it fixes, all measured from your meshes, so any size of robot works:
+
+- the two wheel joints are found (child link named like `wheel`, or
+  `--left NAME --right NAME`); wheel radius, width and separation come from
+  the wheel meshes
+- a mirrored wheel axis is flipped, so a forward command drives forward
+- joints with the same name as a link get `_joint` added (Gazebo refuses
+  the duplicate)
+- collisions: cylinders for the wheels, boxes for the other parts, and a
+  frictionless sphere where the body touches the ground (the caster), at
+  exactly wheel-bottom height so the robot stands level
+- wheel friction, contact stiffness scaled to the robot's weight
+- a 2D LiDAR (on the link named like `lidar`, or a new one on top), an IMU,
+  a world with obstacles, and launch files for RViz and Gazebo
+
+Your original export is kept in `fusion_export_backup/`. Running the script
+again always starts from that backup.
+
+## 2. Add the controller (Day 5)
+
+```bash
+sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers \
+                 ros-humble-gazebo-ros2-control
+python3 ~/Downloads/testbot-ros2-workshop/fusion2sim/fusion2sim.py \
+        ~/Documents/test_ws/src/stateqbot_description
+cd ~/Documents/test_ws && colcon build --symlink-install && source install/setup.bash
+ros2 launch stateqbot_description sim.launch.py rviz:=true
+ros2 topic pub --rate 10 /diff_drive_controller/cmd_vel_unstamped \
+  geometry_msgs/msg/Twist "{linear: {x: 0.15}}"
+```
+
+Without `--no-controller` the script also writes
+`urdf/<robot>.ros2_control.xacro` and `config/ros2_controllers.yaml`. The
+launch files see them and start `joint_state_broadcaster` and
+`diff_drive_controller`.
+
+## 3. The complete package
+
+`stateqbot_description/` is the result of step 2, tested in Gazebo. Use it
+for the experiments so everyone has the same robot. Only one package with
+that name may be in `src/`, so move your own out first:
+
+```bash
+mv ~/Documents/test_ws/src/stateqbot_description ~/Documents/my_export
+cp -r ~/Downloads/testbot-ros2-workshop/stateqbot_description ~/Documents/test_ws/src/
+cd ~/Documents/test_ws && colcon build --symlink-install && source install/setup.bash
+```
+
+## Limits of the script
+
+Two driven wheels plus casters only (no skid-steer, tracks or mecanum).
+The CAD must be x forward, z up, with the wheel axles along y, and the meshes
+in metres; the script stops with a message if the axles are not along y.

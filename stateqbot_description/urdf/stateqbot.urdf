@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<robot name="stateqbot">
+
+  <!-- Materials -->
+  <material name="Steel">
+    <color rgba="0.910 0.678 0.137 1.0"/>
+  </material>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0.000124 0.000001 0.020106" rpy="0 0 0"/>
+      <mass value="5.066079"/>
+      <inertia ixx="4.880784e-03" ixy="3.230863e-07" ixz="-1.568186e-05"
+               iyy="1.152398e-02" iyz="2.637999e-08" izz="1.503038e-02"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.000000 0.000000 0.000000" rpy="0.000000 0.000000 0.000000"/>
+      <geometry>
+        <mesh filename="package://stateqbot_description/meshes/stateqbot/base_link.dae" scale="1 1 1"/>
+      </geometry>
+      <material name="Steel"/>
+    </visual>
+    <collision>
+      <origin xyz="0.000000 0.000000 0.000000" rpy="0.000000 0.000000 0.000000"/>
+      <geometry>
+        <mesh filename="package://stateqbot_description/meshes/stateqbot/base_link.dae" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="Right_wheel">
+    <inertial>
+      <origin xyz="0.000000 0.000000 0.010000" rpy="0 0 0"/>
+      <mass value="0.385127"/>
+      <inertia ixx="8.802519e-05" ixy="0.000000e+00" ixz="0.000000e+00"
+               iyy="8.802519e-05" iyz="0.000000e+00" izz="1.538347e-04"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.080000 0.150000 0.000000" rpy="1.570796 0.000000 0.000000"/>
+      <geometry>
+        <mesh filename="package://stateqbot_description/meshes/stateqbot/Right_wheel.dae" scale="1 1 1"/>
+      </geometry>
+      <material name="Steel"/>
+    </visual>
+    <collision>
+      <origin xyz="0.080000 0.150000 0.000000" rpy="1.570796 0.000000 0.000000"/>
+      <geometry>
+        <mesh filename="package://stateqbot_description/meshes/stateqbot/Right_wheel.dae" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_wheel">
+    <inertial>
+      <origin xyz="0.000000 0.000000 0.010000" rpy="0 0 0"/>
+      <mass value="0.385127"/>
+      <inertia ixx="8.802519e-05" ixy="0.000000e+00" ixz="0.000000e+00"
+               iyy="8.802519e-05" iyz="0.000000e+00" izz="1.538347e-04"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.000000 -0.150000 0.020000" rpy="-1.570796 0.000000 0.000000"/>
+      <geometry>
+        <mesh filename="package://stateqbot_description/meshes/stateqbot/left_wheel.dae" scale="1 1 1"/>
+      </geometry>
+      <material name="Steel"/>
+    </visual>
+    <collision>
+      <origin xyz="0.000000 -0.150000 0.020000" rpy="-1.570796 0.000000 0.000000"/>
+      <geometry>
+        <mesh filename="package://stateqbot_description/meshes/stateqbot/left_wheel.dae" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="lidar">
+    <inertial>
+      <origin xyz="-0.000000 0.000000 0.012500" rpy="0 0 0"/>
+      <mass value="0.138721"/>
+      <inertia ixx="1.502810e-05" ixy="0.000000e+00" ixz="0.000000e+00"
+               iyy="1.502810e-05" iyz="0.000000e+00" izz="1.560611e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.040000 0.000000 -0.045000" rpy="0.000000 0.000000 0.000000"/>
+      <geometry>
+        <mesh filename="package://stateqbot_description/meshes/stateqbot/lidar.dae" scale="1 1 1"/>
+      </geometry>
+      <material name="Steel"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.040000 0.000000 -0.045000" rpy="0.000000 0.000000 0.000000"/>
+      <geometry>
+        <mesh filename="package://stateqbot_description/meshes/stateqbot/lidar.dae" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Right_wheel" type="continuous">
+    <parent link="base_link"/>
+    <child link="Right_wheel"/>
+    <origin xyz="-0.053333 -0.052000 0.020000" rpy="1.570796 0.000000 0.000000"/>
+    <axis xyz="0.000000 0.000000 1.000000"/>
+    <limit effort="100.0" velocity="1.00"/>
+  </joint>
+
+  <joint name="left_wheel" type="continuous">
+    <parent link="base_link"/>
+    <child link="left_wheel"/>
+    <origin xyz="-0.053333 0.052000 0.020000" rpy="-1.570796 0.000000 0.000000"/>
+    <axis xyz="0.000000 0.000000 1.000000"/>
+    <limit effort="100.0" velocity="1.00"/>
+  </joint>
+
+  <joint name="lidar" type="continuous">
+    <parent link="base_link"/>
+    <child link="lidar"/>
+    <origin xyz="0.040000 0.000000 0.045000" rpy="0.000000 0.000000 0.000000"/>
+    <axis xyz="0.000000 0.000000 1.000000"/>
+    <limit effort="100.0" velocity="1.00"/>
+  </joint>
+
+  <!-- ROS 2 control: generated generic system -->
+  <ros2_control name="stateqbot_system" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="cmd_topic">sim/stateqbot_system/cmd</param>
+      <param name="state_topic">sim/stateqbot_system/state</param>
+    </hardware>
+
+    <joint name="Right_wheel">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="left_wheel">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="lidar">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+
+</robot>

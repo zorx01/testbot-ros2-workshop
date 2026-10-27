@@ -1,0 +1,95 @@
+# RViz config for display.launch.py.
+#
+# MANUAL EDIT (not from fusion2URDF): camera framing.
+#   was  Distance: 2.0, Focal Point Z: 0.3
+#   now  Distance: 0.8, Focal Point Z: 0.03
+# stateqbot is 0.26 m across and 0.096 m tall. A 2 m orbit distance put it
+# in the middle distance as a small grey speck, and a focal point 0.3 m up
+# aimed the camera at empty air three times the robot's own height.
+# 0.8 m fills the viewport; 0.03 m is roughly the wheel axle height.
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /RobotModel1
+        - /TF1
+    Tree Height: 600
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Name: root
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Value: true
+      Cell Size: 0.1
+      Color: 160; 160; 164
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Plane: XY
+      Plane Cell Count: 20
+      Reference Frame: <Fixed Frame>
+      Alpha: 0.5
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Value: true
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Visual Enabled: true
+      Collision Enabled: false
+      Alpha: 1.0
+      Links:
+        All Links Enabled: true
+        Expand Link Details: false
+        Expand Tree: false
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Value: true
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Marker Scale: 0.2
+      Update Interval: 0
+      Frame Timeout: 15
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: base_link
+    Frame Rate: 30
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Select
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Distance: 0.72
+      Focal Point:
+        X: -0.03
+        Y: 0
+        Z: 0.03
+      # Three-quarter view from behind and above. The wheels are at the
+      # REAR (joint origin x = -0.081), so the default yaw of 0, which
+      # looks at the front, hides both of them behind the chassis.
+      Pitch: 0.48
+      Yaw: 3.85
+      Target Frame: <Fixed Frame>
+      Near Clip Distance: 0.01
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 800
+  Width: 1200
