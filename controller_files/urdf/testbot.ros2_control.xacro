@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!--
+  MANUAL EDIT (not from fusion2URDF) - whole file.
+
+  ros2_control hardware description for testbot.
+
+  The exporter emitted a <ros2_control> block inside the assembly macro that
+  hard-coded mock_components/GenericSystem, so `gazebo_ros2_control` had no
+  hardware to attach to and the robot could never be driven in Gazebo.
+
+  This file replaces it and selects the plugin from a `use_sim` flag:
+    use_sim:=true   -> gazebo_ros2_control/GazeboSystem  (physics)
+    use_sim:=false  -> mock_components/GenericSystem     (no physics)
+
+  Interfaces: diff_drive_controller commands wheel VELOCITY and reads back
+  position + velocity, so that is exactly what is exposed. The generated
+  block also offered a position command interface on the same joints, which
+  is what let two controllers claim the same resource.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="testbot_ros2_control" params="prefix use_sim">
+
+    <ros2_control name="${prefix}testbot_system" type="system">
+      <hardware>
+        <xacro:if value="${use_sim}">
+          <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </xacro:if>
+        <xacro:unless value="${use_sim}">
+          <plugin>mock_components/GenericSystem</plugin>
+          <!-- Integrate the velocity command into the position state so the
+               mock hardware behaves like a real wheel when there is no
+               physics engine. -->
+          <param name="calculate_dynamics">true</param>
+        </xacro:unless>
+      </hardware>
+
+      <joint name="${prefix}Revolute_2">
+        <command_interface name="velocity">
+          <param name="min">-30.0</param>
+          <param name="max">30.0</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <joint name="${prefix}Revolute_4">
+        <command_interface name="velocity">
+          <param name="min">-30.0</param>
+          <param name="max">30.0</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+    </ros2_control>
+
+  </xacro:macro>
+
+</robot>

@@ -1,0 +1,145 @@
+# RViz config for sim.launch.py.
+#
+# MANUAL EDIT (not from fusion2URDF) - new file.
+#
+# Differences from display.rviz, and why:
+#   Fixed Frame: odom, not base_link. With base_link fixed, the robot sits
+#     still and the WORLD slides past it, which makes odometry impossible
+#     to judge. With odom fixed, the robot drives across the grid and you
+#     can watch odom drift away from ground truth.
+#   LaserScan on /scan with Best Effort reliability. Gazebo sensor
+#     publishers are best-effort; an RViz display left on the default
+#     Reliable will subscribe and then show absolutely nothing, with no
+#     error message. This is the single most common "my LiDAR is broken"
+#     support question.
+#   Odometry display on /diff_drive_controller/odom to leave a trail.
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /RobotModel1
+        - /LaserScan1
+    Tree Height: 600
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Name: root
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Value: true
+      Cell Size: 0.5
+      Color: 160; 160; 164
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Plane: XY
+      Plane Cell Count: 20
+      Reference Frame: <Fixed Frame>
+      Alpha: 0.5
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Value: true
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Visual Enabled: true
+      Collision Enabled: false
+      Alpha: 1.0
+      Links:
+        All Links Enabled: true
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Value: true
+      Show Arrows: false
+      Show Axes: true
+      Show Names: true
+      Marker Scale: 0.3
+      Update Interval: 0
+      Frame Timeout: 15
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Enabled: true
+      Value: true
+      Topic:
+        Value: /scan
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+      Style: Points
+      Size (Pixels): 6
+      Size (m): 0.01
+      Alpha: 1
+      Decay Time: 0
+      Color: 255; 40; 40
+      Color Transformer: FlatColor
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Use Fixed Frame: true
+      Use rainbow: true
+    - Class: rviz_default_plugins/Odometry
+      Name: Odometry
+      Enabled: true
+      Value: true
+      Topic:
+        Value: /diff_drive_controller/odom
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Keep: 100
+      Position Tolerance: 0.05
+      Angle Tolerance: 0.05
+      Shape:
+        Alpha: 1
+        Color: 255; 200; 0
+        Head Length: 0.05
+        Head Radius: 0.03
+        Shaft Length: 0.1
+        Shaft Radius: 0.015
+        Value: Arrow
+      Covariance:
+        Value: false
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: odom
+    Frame Rate: 30
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Select
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      # Framed to hold the robot AND the nearest obstacles, seen from
+      # behind. A 0.26 m robot at 3.5 m is a speck; 2.2 m with the focal
+      # point pushed 0.7 m ahead keeps both the robot and the boxes it is
+      # scanning in shot.
+      Distance: 2.2
+      Focal Point:
+        X: 0.7
+        Y: 0
+        Z: 0.0
+      Pitch: 0.55
+      Yaw: 3.05
+      Target Frame: <Fixed Frame>
+      Near Clip Distance: 0.01
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 800
+  Width: 1200
