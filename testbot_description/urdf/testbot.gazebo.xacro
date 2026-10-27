@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!--
+  MANUAL EDIT (not from fusion2URDF) - whole file.
+
+  Gazebo Classic 11 additions: the ros2_control system plugin and the
+  surface properties of the contact patches.
+
+  NOTE: Gazebo Classic is end-of-life (Jan 2025). It is used here because
+  this workshop targets ROS 2 Humble on Ubuntu 22.04, where Classic is the
+  supported pairing. New projects should use modern Gazebo (gz-sim).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="testbot_gazebo" params="prefix">
+
+    <!-- ros2_control system plugin. It reads the <ros2_control> block from
+         the robot_description and starts a controller_manager INSIDE the
+         Gazebo process, so there is no separate ros2_control_node. -->
+    <xacro:if value="$(arg use_control)">
+    <gazebo>
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <parameters>$(find testbot_description)/config/ros2_controllers.yaml</parameters>
+      </plugin>
+    </gazebo>
+    </xacro:if>
+
+    <!-- ================================================================
+         Contact surfaces.
+
+         Wheels: mu1 = mu2 = 1.0 so the tyres grip and the wheel encoders
+         match the ground truth. kp/kd are the ODE contact stiffness and
+         damping; a 0.548 kg robot on a soft contact sinks visibly, so the
+         contact is made stiff. minDepth avoids the jitter that comes from
+         contacts being created and destroyed every step.
+
+         base_link carries the caster sphere, which must SLIDE, not grip:
+         mu1 = mu2 = 0. A real ball caster swivels; a frictionless sphere
+         is the standard way to fake that without adding two more joints.
+
+         Surface parameters reach ODE only if the <collision> elements
+         are left UNNAMED - see the long note in
+         urdf/assemblies/testbot.urdf.xacro. With them named, the mu = 0
+         below never arrived, the caster gripped like a tyre, and the
+         wheels stalled at 41% of the commanded speed.
+
+         No <maxVel> is set here. It was tried as a suspect for that
+         stall and measured to make no difference, so it is simply left
+         out and the world's <contact_max_correcting_vel> applies.
+         ================================================================ -->
+    <gazebo reference="${prefix}backward_left_wheel">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.001</minDepth>
+      <material>Gazebo/DarkGrey</material>
+    </gazebo>
+
+    <gazebo reference="${prefix}Backward_Right_wheel">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.001</minDepth>
+      <material>Gazebo/DarkGrey</material>
+    </gazebo>
+
+    <gazebo reference="${prefix}base_link">
+      <mu1>0.0</mu1>
+      <mu2>0.0</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.001</minDepth>
+      <material>Gazebo/White</material>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

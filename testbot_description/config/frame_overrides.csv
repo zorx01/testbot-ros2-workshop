@@ -1,0 +1,4 @@
+link,parent_joint,joint_type,rule,original_roll_deg,original_pitch_deg,original_yaw_deg,post_roll_deg,post_pitch_deg,post_yaw_deg,role
+Backward_Right_wheel,Revolute_4,continuous,world_rpy,180.000000,0.000000,0.000000,-90.000000,0.000000,0.000000,revolute_axis_z
+backward_left_wheel,Revolute_2,continuous,auto,0.000000,0.000000,0.000000,-90.000000,0.000000,0.000000,revolute_axis_z
+base_link,,root,auto,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,root_x_forward_z_up

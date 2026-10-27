@@ -4,7 +4,12 @@ You export the robot from Fusion 360 with fusion2URDF. That gives you a ROS 2
 package called `testbot_description`. These files turn that export into a
 robot you can simulate and drive.
 
-There are two downloads, used on different days.
+Two ways to use this repository:
+
+- **Follow the steps** with your own export: `simulation_files/` on Day 4,
+  `controller_files/` on Day 5 (sections 1 and 2 below).
+- **Use the complete package** `testbot_description/`: the finished, tested
+  robot with simulation and controllers already in it (section 3).
 
 ## Get the files
 
@@ -78,3 +83,22 @@ Drive it:
 ros2 topic pub --rate 10 /diff_drive_controller/cmd_vel_unstamped \
   geometry_msgs/msg/Twist "{linear: {x: 0.15}}"
 ```
+
+## 3. The complete package
+
+Everything from sections 1 and 2, already put together. Use it to run the
+experiments, or to compare against your own package.
+
+```bash
+cd ~/Downloads
+git clone https://github.com/zorx01/testbot-ros2-workshop.git
+cp -r ~/Downloads/testbot-ros2-workshop/testbot_description ~/Documents/test_ws/src/
+cd ~/Documents/test_ws
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch testbot_description sim.launch.py rviz:=true
+```
+
+Only one `testbot_description` may be in `src/` at a time. If your own
+export is there, move it out first (for example to `~/Documents/my_export`).

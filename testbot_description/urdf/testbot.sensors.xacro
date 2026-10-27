@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<!--
+  MANUAL EDIT (not from fusion2URDF) - whole file.
+
+  The Fusion 360 CAD contains no sensors, but Day 5 Session 2 of the
+  workshop needs /scan and /imu/data. These two links are therefore
+  invented, not measured. Positions are xacro properties so they are easy
+  to correct against the physical robot.
+
+  Chosen placement (PLEASE CHECK AGAINST THE REAL ROBOT):
+
+    lidar_link  xyz (0, 0, 0.076)   rpy (0,0,0)
+        Cylinder r = 0.0375 m, h = 0.040 m, standing on the top plate.
+        The top plate surface is z = 0.056, so the body spans
+        z = 0.056 .. 0.096 and the origin is at 0.056 + h/2 = 0.076.
+        Sized as an RPLIDAR A1 (76.5 mm diameter, ~41 mm tall), which is
+        what the 0.12 - 3.5 m range below describes.
+        The scan plane at z = 0.076 clears the 0.056 top plate, so the
+        LiDAR cannot see its own chassis even though the chassis half
+        diagonal (0.158 m) is outside the 0.12 m minimum range.
+
+    imu_link    xyz (-0.06, 0, 0.058)   rpy (0,0,0)
+        Box 0.025 x 0.018 x 0.004, lying on the top plate behind the
+        LiDAR (z = 0.056 + 0.002). Sized as an MPU-6050 breakout.
+        Being 60 mm behind the centre, its linear acceleration picks up a
+        genuine r x alpha term when the robot turns.
+
+  Mass: both links are given 1 g. Gazebo lumps fixed-joint children into
+  their parent, so this mass is ADDED to base_link. 1 g keeps the total at
+  the 0.548 kg the CAD reports (0.36% error) while staying non-zero, which
+  Gazebo requires.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="testbot_sensors" params="prefix">
+
+    <xacro:property name="lidar_radius" value="0.0375"/>
+    <xacro:property name="lidar_height" value="0.040"/>
+    <xacro:property name="top_plate_z"  value="0.056"/>
+    <xacro:property name="sensor_mass"  value="0.001"/>
+
+    <!-- ===================== LiDAR ===================== -->
+    <link name="${prefix}lidar_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="${sensor_mass}"/>
+        <inertia
+          ixx="${sensor_mass * (3*lidar_radius*lidar_radius + lidar_height*lidar_height) / 12.0}"
+          ixy="0.0" ixz="0.0"
+          iyy="${sensor_mass * (3*lidar_radius*lidar_radius + lidar_height*lidar_height) / 12.0}"
+          iyz="0.0"
+          izz="${sensor_mass * lidar_radius * lidar_radius / 2.0}"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
+        </geometry>
+        <material name="Rubber_Black"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}lidar_joint" type="fixed">
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}lidar_link"/>
+      <origin xyz="0 0 ${top_plate_z + lidar_height/2.0}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- ====================== IMU ====================== -->
+    <link name="${prefix}imu_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="${sensor_mass}"/>
+        <inertia ixx="1e-09" ixy="0.0" ixz="0.0"
+                 iyy="1e-09" iyz="0.0" izz="1e-09"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.025 0.018 0.004"/>
+        </geometry>
+        <material name="Rubber_Black"/>
+      </visual>
+    </link>
+
+    <joint name="${prefix}imu_joint" type="fixed">
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}imu_link"/>
+      <origin xyz="-0.06 0 ${top_plate_z + 0.002}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- ============ Gazebo Classic sensor plugins ============ -->
+
+    <gazebo reference="${prefix}lidar_link">
+      <material>Gazebo/DarkGrey</material>
+      <sensor name="${prefix}lidar" type="ray">
+        <always_on>true</always_on>
+        <!-- Draw the blue scan cone in the Gazebo GUI. -->
+        <visualize>true</visualize>
+        <update_rate>10.0</update_rate>
+        <pose>0 0 0 0 0 0</pose>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1.0</resolution>
+              <min_angle>-3.141593</min_angle>
+              <max_angle>3.141593</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.12</min>
+            <max>3.5</max>
+            <resolution>0.015</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </ray>
+        <plugin name="${prefix}lidar_controller" filename="libgazebo_ros_ray_sensor.so">
+          <ros>
+            <remapping>~/out:=scan</remapping>
+          </ros>
+          <output_type>sensor_msgs/LaserScan</output_type>
+          <frame_name>${prefix}lidar_link</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <gazebo reference="${prefix}imu_link">
+      <sensor name="${prefix}imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>false</visualize>
+        <imu>
+          <angular_velocity>
+            <x><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></x>
+            <y><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></y>
+            <z><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></x>
+            <y><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></y>
+            <z><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></z>
+          </linear_acceleration>
+        </imu>
+        <plugin name="${prefix}imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+          <ros>
+            <remapping>~/out:=imu/data</remapping>
+          </ros>
+          <frame_name>${prefix}imu_link</frame_name>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

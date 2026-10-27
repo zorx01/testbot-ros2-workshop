@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>testbot_description</name>
+  <version>0.2.0</version>
+  <description>
+    URDF/xacro description, Gazebo Classic simulation and ros2_control
+    configuration for testbot, a two-wheel differential-drive robot with a
+    ball caster. Modelled in Fusion 360 and exported with fusion2URDF
+    v3.1.1, then corrected by hand (see README.md).
+  </description>
+
+  <maintainer email="nandagopan.k01@gmail.com">Nandagopan</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Description and visualisation -->
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <!-- ros2_control -->
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>ros2_control</exec_depend>
+  <exec_depend>ros2_controllers</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>diff_drive_controller</exec_depend>
+  <!-- forward_command_controller: wheel_velocity_controller in
+       config/ros2_controllers.yaml is one, loaded inactive for the
+       controller-lifecycle demo. Still used, so still declared. -->
+  <exec_depend>forward_command_controller</exec_depend>
+  <!-- mock_components: the use_sim:=false branch of
+       urdf/testbot.ros2_control.xacro selects
+       mock_components/GenericSystem. Still used, so still declared. -->
+  <exec_depend>hardware_interface</exec_depend>  <!-- provides mock_components in Humble -->
+
+  <!-- Gazebo Classic simulation -->
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_ros2_control</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+
+  <!-- Driving it by hand -->
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+
+  <!-- scripts/drive_demo.py and scripts/scan_reader.py -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <!-- Puts install/.../share on GAZEBO_MODEL_PATH so Gazebo can resolve
+         the package:// URIs in the visual meshes. gzserver does not need
+         it (the collisions are primitives) but gzclient does, and without
+         it gzclient hangs forever on the "Preparing your world" splash
+         with no error - the simulation runs, the controllers come up, and
+         the window simply never renders.
+
+         The cost is that gzclient's Insert-Model widget scans every
+         sibling directory in share/ and logs
+             [Err] [InsertModelWidget.cc:403] Missing model.config for
+             model ".../share/testbot_description/../ament_index"
+         once per non-model directory at startup. Those lines are
+         cosmetic. Do not "fix" them by removing this export. -->
+    <gazebo_ros gazebo_model_path="${prefix}/.."/>
+  </export>
+</package>

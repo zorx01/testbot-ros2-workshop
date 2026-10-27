@@ -1,0 +1,209 @@
+<?xml version="1.0" ?>
+<!--
+  MANUAL EDIT (not from fusion2URDF) - whole file.
+
+  A ground plane, a sun and five boxes placed so the LiDAR demo has
+  something to see. Box positions are chosen relative to the spawn point
+  (0, 0), with the robot facing +x:
+
+    front_box   1.20 m ahead      - drive at it, watch /scan min range fall
+    left_box    0.90 m ahead, 0.60 m left
+    right_box   0.90 m ahead, 0.60 m right
+    far_box     2.50 m ahead      - inside the 3.5 m max range
+    side_wall   1.5 m to the left, a long low wall
+
+  Everything is <static>true</static>, so the robot can bump into them
+  without knocking them over mid-demo.
+-->
+<sdf version="1.6">
+  <world name="obstacles">
+
+    <!-- The sun and the ground plane are written out in full rather than
+         pulled in with <include><uri>model://sun</uri></include>.
+
+         An <include> is resolved against GAZEBO_MODEL_PATH, and sourcing
+         /opt/ros/humble/setup.bash does NOT set that variable - only
+         /usr/share/gazebo/setup.sh does. When it is unset, Gazebo falls
+         back to downloading from http://models.gazebosim.org/, which
+         stalls world loading well past spawn_entity's 30 s timeout and
+         fails with the thoroughly misleading
+             "Service /spawn_entity unavailable.
+              Was Gazebo started with GazeboRosFactory?"
+         Inlining removes the dependency on both the variable and the
+         network. -->
+
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Keep the simulation real-time and the step small enough that a
+         0.035 m wheel does not tunnel through the ground plane. -->
+    <physics name="default_physics" default="true" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>100</iters>
+          <sor>1.3</sor>
+        </solver>
+        <constraints>
+          <cfm>0.0</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>100.0</contact_max_correcting_vel>
+          <contact_surface_layer>0.001</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!-- Ground truth. Without this plugin Gazebo publishes no model poses
+         at all, and there is no way to check odometry against reality -
+         which is the whole point of the drive test. It provides
+             /gazebo/model_states           (topic)
+             /gazebo/get_entity_state       (service)
+             /gazebo/set_entity_state       (service)
+         Note that gazebo.launch.py loads init, factory and force_system,
+         but NOT state, so it has to be requested here. -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>50.0</update_rate>
+    </plugin>
+
+    <!-- Where the Gazebo GUI camera starts. Without this the camera opens
+         at Gazebo's default pose, several metres back, and a 0.26 m robot
+         is a speck in the middle of an empty grid. This pose frames the
+         robot at the origin with the obstacle boxes ahead of it. -->
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>-1.95 -1.95 1.45 0 0.50 0.785</pose>
+      </camera>
+    </gui>
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <!-- ============ obstacles ============ -->
+
+    <model name="front_box">
+      <static>true</static>
+      <pose>1.2 0 0.15 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.3 0.3 0.3</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 0.3 0.3</size></box></geometry>
+          <material><ambient>0.8 0.2 0.2 1</ambient><diffuse>0.8 0.2 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="left_box">
+      <static>true</static>
+      <pose>0.9 0.6 0.15 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.3 0.3 0.3</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 0.3 0.3</size></box></geometry>
+          <material><ambient>0.2 0.6 0.2 1</ambient><diffuse>0.2 0.6 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="right_box">
+      <static>true</static>
+      <pose>0.9 -0.6 0.15 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.3 0.3 0.3</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 0.3 0.3</size></box></geometry>
+          <material><ambient>0.2 0.4 0.8 1</ambient><diffuse>0.2 0.4 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="far_box">
+      <static>true</static>
+      <pose>2.5 0.2 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.4 0.4 0.4</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.4 0.4 0.4</size></box></geometry>
+          <material><ambient>0.8 0.6 0.2 1</ambient><diffuse>0.8 0.6 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="side_wall">
+      <static>true</static>
+      <pose>1.0 1.5 0.15 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>3.0 0.1 0.3</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>3.0 0.1 0.3</size></box></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
